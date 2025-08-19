@@ -1,0 +1,3 @@
+This is for me or for those to get an idea on how to change their own rate to a much better outcome....
+I dont look for low latency audio or aim for it.
+This is just to have a smooth playback under heavy usage as when i used to game or use my CPU power to max audio was cracking a lot and in some cases even under slight load.
