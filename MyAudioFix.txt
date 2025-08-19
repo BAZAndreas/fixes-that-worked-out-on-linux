@@ -1,0 +1,216 @@
+
+#########
+
+First of all sorry i aint a pro at this :) So bare with me.
+If you dont know what some settings do please search them up to get an idea on what each setting does.
+This is how i fixed my audio craclking under heavy usage and in some of my games.
+Its not perfect but it works for me.
+Use your user name as this is just an example (:
+
+#########
+
+
+# Use as is with the dot in it to find your card name "pw-dump | grep card.name."
+
+
+❯ pw-dump | grep card.name
+        "alsa.card_name": "HDA ATI HDMI",
+        "alsa.long_card_name": "HDA ATI HDMI at 0xfca20000 irq 76",
+        "api.alsa.card.name": "HDA ATI HDMI",
+        "alsa.card_name": "HD-Audio Generic",
+        "alsa.long_card_name": "HD-Audio Generic at 0xfce00000 irq 77",
+        "api.alsa.card.name": "HD-Audio Generic",
+        "alsa.card_name": "HD-Audio Generic",
+        "alsa.long_card_name": "HD-Audio Generic at 0xfce00000 irq 77",
+        "api.alsa.card.name": "HD-Audio Generic",
+            "description": "The ALSA card name",
+
+~
+
+
+
+# This is my way to force my rates and latency but keep in mind i dont look for low latency switches.
+# My focus is to have less CPU usage for audio and have a smooth playback instead of dynamic latency.
+# Pipwire-pulse tends to switch to 10ms or less when he wants.
+# A reminder that default.clock.quantum=2048 is the max unless you set clock.power-of-two-quantum=false as it calculates it with a power of two (1024-2048-4096-8192) the minimum i believe is 0 auto but you might face a bunch of audio crackling bellow 1024...
+
+
+/home/baz/.config/pipewire/pipewire.conf.d/pwrate.conf
+
+
+{
+  "context.properties": {
+    "default.clock.rate": "44100",
+    "default.clock.allowed-rates": [
+      "44100"
+    ],
+    "default.clock.quantum": "3072",
+    "default.clock.quantum-limit": "8192",
+    "default.clock.min-quantum": "3072",
+    "default.clock.max-quantum": "8192",
+    "link.max-buffers": "64",
+    "log.level": "0",
+    "clock.power-of-two-quantum": false,
+    "default.clock.quantum-floor": "64"
+  }
+}
+
+
+
+
+
+
+In case you want to force rules on streaming apps but not all will accept the rules as some need the use of them.
+
+/home/baz/.config/pipewire/pipewire-pulse.conf.d/pwrate-pulse-rules.conf
+
+My own rules.
+
+stream.properties = {
+    node.latency = 0/44100
+    #node.autoconnect = true
+    #resample.disable = false  # false when set to true firefox has no audio or cause system hangs...
+    resample.quality = 0  # 4
+    #monitor.channel-volumes = false
+    #channelmix.disable = true      # false   # brakes game and some other app sounds.
+    #channelmix.min-volume = 0.0
+    #channelmix.max-volume = 10.0
+    channelmix.normalize = false  # false
+    channelmix.mix-lfe = false  # true
+    channelmix.upmix = false  # true
+    channelmix.upmix-method = Disabled  # none, simple, psd (Def) ,Disabled as last resort forced
+    #channelmix.lfe-cutoff = 150.0
+    #channelmix.fc-cutoff = 12000.0
+    #channelmix.rear-delay = 12.0
+    #channelmix.stereo-widen = 0.0
+    #channelmix.hilbert-taps = 0
+    dither.noise = 0  # 0 def
+    dither.method = Disabled # rectangular, triangular, triangular-hf, wannamaker3, shaped5, none def
+    #debug.wav-path = ""
+}
+
+
+##### For Firefox to work and some other apps as they will have zero sound without it....
+
+/home/baz/.config/pipewire/pipewire-pulse.conf.d/Firefox-rules.conf
+
+
+pulse.rules = [
+    {
+        # skype does not want to use devices that don't have an S16 sample format.
+        matches = [
+             #{ application.process.binary = "teams" }
+             #{ application.process.binary = "teams-insiders" }
+             { application.process.binary = "firefox" }
+        ]
+        actions = { quirks = [ force-s16-info ] }
+    }
+    {
+        # speech dispatcher asks for too small latency and then underruns.
+        matches = [ { application.name = "~firefox*" } ]
+        actions = {
+            update-props = {
+                pulse.min.req          = 0/44100     # 21ms
+                pulse.min.quantum      = 0/44100     # 21ms
+                default.clock.rate = 44100
+            }
+        }
+    }
+]
+
+
+
+
+
+
+###### For wireplumber rules as this is the magic place to make that 16Bit forced to work.
+# You can add multiple formats in [] if you want but i prefer 44.1khz and audio format also can be changed to whatever you want as S16LE S24LE S32LE or even S8LE for 8Bit in case its that old.
+Also keep in mind that latency grows a bit when rates are changed so keep a tweaking on api.alsa.period-size= the higher the audio.rate the latency also grows to compensate.
+I found mine working best with this.
+
+
+
+/home/baz/.config/wireplumber/wireplumber.conf.d/50-force-s16.conf
+
+
+
+monitor.alsa.rules = [
+  {
+    matches = [
+      { alsa.id = "ALC892 Analog" }
+      { media.class = "Audio/Sink" }
+      { node.name = "~alsa_output.*analog.*" }
+      { node.name = "~alsa_input.*analog.*" }
+      { node.name = "~alsa_input.*" }
+      { node.name = "~alsa_output.*" }
+    ],
+    actions = {
+      update-props = {
+        "audio.channels" "2"
+        "audio.format" = "S16LE"
+        "audio.rate" = 44100
+        "audio.allowed-rates" = [ 44100 ]
+        "resample.disable" = true
+        "resample.quality" = 0
+        "dither.method" = "Disabled"
+        "channelmix.upmix" = false
+        "channelmix.upmix-method" = "Disabled"
+        "channelmix.mix-lfe" = false
+        "channelmix.disable" = true
+        "api.alsa.disable-mmap" = true
+        "api.alsa.disable-batch" = true
+        "api.alsa.disable-tsched" = true
+        "api.alsa.use-chmap" = false
+        "api.alsa.auto-link" = true
+        "api.alsa.multi-rate" = false
+        "api.alsa.headroom" = 8192
+        "api.alsa.start-delay" = 1024
+        "alsa.resolution_bits" = 16
+        "api.alsa.period-size" = 3072
+        "api.alsa.period-num" = 2
+        "audioconvert.filter-graph.disable" = true
+      }
+    }
+  }
+]
+
+
+
+
+
+
+
+##########
+##########
+
+If you dont want to make simple configs and want it to be global either move the configs that you need from:
+
+/usr/share/pipewire/
+And
+/usr/share/wireplumber/
+
+To your /home/baz/.config/pipewire/ Or /home/baz/.config/wireplumber/ And you mod them there as you see fit.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
