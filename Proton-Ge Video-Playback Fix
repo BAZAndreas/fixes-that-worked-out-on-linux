@@ -1,0 +1,16 @@
+Proton-GE10-25 video playback fix some sort...
+Not sure for how long until they change something again but its a short term fix.
+This issues is since half a year already that GE-Proton has no video playback in games and might cause a crash when there is no video playback...or you cant load the next level just cuz the video did not play.
+There are issues going on late days that some games relay on a video playback in order to work correctly which half a year bug killed my experience with the games i played.
+
+sudo ln -s /usr/lib/libvpx.so.11 /usr/lib/libvpx.so.6
+sudo ln -s /usr/lib/libtheoradec.so.2 /usr/lib/libtheoradec.so.1
+sudo ln -s /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.1.1
+sudo ln -s /usr/lib/libjpeg.so.8 /usr/lib/libjpeg.so.62
+
+Revert it with 
+
+sudo rm /usr/lib/libvpx.so.6
+sudo rm /usr/lib/libtheoradec.so.1
+sudo rm /usr/lib/libjpeg.so.62
+sudo rm /usr/lib/libcrypto.so.1.1
