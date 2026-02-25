@@ -9,9 +9,16 @@ sudo ln -s /usr/lib/libtheoradec.so.2 /usr/lib/libtheoradec.so.1
 sudo ln -s /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.1.1
 sudo ln -s /usr/lib/libjpeg.so.8 /usr/lib/libjpeg.so.62
 
+## Extra if needed for other games...
+sudo ln -s /usr/lib/libxml2.so.16 /usr/lib/libxml2.so.2
+sudo ln -s /usr/lib/libFLAC.so.14 /usr/lib/libFLAC.so.8
+sudo ln -s /usr/lib/libwebp.so.7 /usr/lib/libwebp.so.6
+sudo ln -s /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.1
+
 Revert it with 
 
 sudo rm /usr/lib/libvpx.so.6
 sudo rm /usr/lib/libtheoradec.so.1
 sudo rm /usr/lib/libjpeg.so.62
 sudo rm /usr/lib/libcrypto.so.1.1
+
