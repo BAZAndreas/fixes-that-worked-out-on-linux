@@ -78,7 +78,8 @@ stream.properties = {
     channelmix.normalize = false  # false
     channelmix.mix-lfe = false  # true
     channelmix.upmix = false  # true
-    channelmix.upmix-method = Disabled  # none, simple, psd (Def) ,Disabled as last resort forced
+    ## Since Proton GE has patches done that brakes things as usual instead of fixing...he broke the audio and this time where forced to use DEF or simple...
+    channelmix.upmix-method = simple  # none, simple, psd (Def) ,Disabled as last resort forced
     #channelmix.lfe-cutoff = 150.0
     #channelmix.fc-cutoff = 12000.0
     #channelmix.rear-delay = 12.0
@@ -154,7 +155,8 @@ monitor.alsa.rules = [
         "resample.quality" = 0
         "dither.method" = "Disabled"
         "channelmix.upmix" = false
-        "channelmix.upmix-method" = "Disabled"
+        # Same as above...Proton GE fun park in action doing things he should not do it is enough games are broken but audio to now...
+        "channelmix.upmix-method" = "simple" 
         "channelmix.mix-lfe" = false
         "channelmix.disable" = true
         "api.alsa.disable-mmap" = true
