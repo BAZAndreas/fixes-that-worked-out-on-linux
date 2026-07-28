@@ -177,7 +177,30 @@ monitor.alsa.rules = [
 ]
 
 
+### Added a new fix for Wine/Proton audio fix even tho adds delay...as expected obviously but least the audio has less cracks in it plus less CPU wasted.
 
+/home/baz/.config/pipewire/pipewire-pulse.conf.d/99-wine-quantum.conf
+
+pulse.rules = [
+  {
+    matches = [
+      { application.process.binary = "wine64-preloader" }
+    ]
+    actions = {
+        quirks = [ force-s16-info ]
+      update-props = {
+        pulse.default.rate = 44100
+        pulse.default.position = [ FL FR ]
+        pulse.default.format = S16LE
+        pulse.fix.format = "S16LE"
+        pulse.default.req = 1024/44100
+        pulse.min.req     = 1024/44100
+        pulse.min.quantum = 1024/44100
+        pulse.min.frag    = 1024/44100
+      }
+    }
+  }
+]
 
 
 
@@ -192,7 +215,7 @@ And
 /usr/share/wireplumber/
 
 To your /home/baz/.config/pipewire/ Or /home/baz/.config/wireplumber/ And you mod them there as you see fit.
-
+To your HOME as in your NAME not my NAME !!! In case someone just copy paste this all for no reason without even reading a single line of text...
 
 
 
