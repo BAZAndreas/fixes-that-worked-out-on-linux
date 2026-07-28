@@ -1,0 +1,24 @@
+Since Cachy released Version 11.0-20260702 Audio is broken completely.
+The driver is enabled by default. To disable it and use winepulse.drv set PROTON_USE_PIPEWIRE=0.
+You have to use PROTON_USE_PIPEWIRE=0 even if you have pipewire as a driver installed to fix the audio heavy crackling issues...this is a bit dumb to find out after 6hr of nervs and headaches.
+
+Leftover notes 
+You can also use WINE_AUDIO_DRIVER to set the list of drivers for wine to choose from. The default list is pipewire,pulse,alsa. For example WINE_AUDIO_DRIVER=pulse will use winepulse.drv exclusively.
+When reporting issues with winepipewire.drv remember to use PROTON_LOG=warn+pipewire,warn+mmdevapi %command% for create meaningful logs.
+You can make sure the game uses winepipewire.drv either through pw-top or by looking at the audio device names in the game itself which should include (Pipewire) in their name.
+
+Tampering with the audio backend is not nice...
+Tampering with the video backend is neither nice again.
+
+This day to day patches and weird experimentation also broke certain games like GROUNDED now since the Proton 11.x is out the game fails with TTS.
+(Have not tested it again with PROTON_USE_PIPEWIRE=0 set but i doubt it will even work)
+
+Proton-GE 11.1 was a mess to even begin with.
+The same goes for 11.2 with broken half prefixes.
+The 11.3 is even worst...since it brakes multiple games....Cyberpunk crashes under GE without a single good LOGs but only BS UMU and noise.
+Dead Island 2 is completely broken under GE as well now.
+Need For Speed Heat is broken since 10-27 and ignored without care.(Cachy is the same)
+
+And since they seem to share the same patches...there is no care at all to fix this neither from one or another party.
+The experience is going down not up seems like.
+As of to day patches and what not they keep making it worst than better.
