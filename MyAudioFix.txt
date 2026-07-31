@@ -38,25 +38,24 @@ Use your user name as this is just an example (:
 /home/baz/.config/pipewire/pipewire.conf.d/pwrate.conf
 
 
-{
-  "context.properties": {
-    "default.clock.rate": "44100",
-    "default.clock.allowed-rates": [
-      "44100"
-    ],
-    "default.clock.quantum": "3072",
-    "default.clock.quantum-limit": "8192",
-    "default.clock.min-quantum": "3072",
-    "default.clock.max-quantum": "8192",
-    "link.max-buffers": "64",
-    "log.level": "0",
-    "clock.power-of-two-quantum": false,
-    "default.clock.quantum-floor": "64"
-  }
+context.properties = {
+    default.clock.rate = 44100  # I care about less noise in the background (Dead Island 2 Seems to not like this rate...shame works perfectly under windows so ProtonGE/Cachy broke something unless Valve also broke it as well)
+    default.clock.allowed-rates = [ 44100 48000 ]   # Allow this two only but 44.1khz is prefered
+    default.clock.quantum = 3072  # 1024
+    default.clock.min-quantum = 32  # 32
+    default.clock.quantum-limit = 8192  # 8192
+    default.clock.max-quantum = 8192  # 2048
+    clock.power-of-two-quantum = false   # true (If you want a custom value set this to false)
+    link.max-buffers = 64   # 64 / Could be a bigger value ? 3 clients can only support 16 buffers /More buffers is almost always worse than less, latency and memory wise.
+    default.clock.quantum-floor = 8   # 4 / Minimum quantum to reserve space for. This is the minimum buffer size used in the graph, regardless of the samplerate.
+    log.level = 0   # 2
+    settings.check-quantum = false  # false
+    settings.check-rate = fasle     # false
+    mem.allow-mlock = true  # true
+    mem.warn-mlock = false  # false
+    mem.mlock-all = false   # false
+    context.modules.allow-empty = false  # false / True if you want noise to be filtered out but better not since they might warn about an issue.
 }
-
-
-
 
 
 
@@ -67,28 +66,38 @@ In case you want to force rules on streaming apps but not all will accept the ru
 My own rules.
 
 stream.properties = {
-    node.latency = 0/44100
-    #node.autoconnect = true
-    #resample.disable = false  # false when set to true firefox has no audio or cause system hangs...
-    resample.quality = 0  # 4
+    node.latency = 2048/44100  # Def 1024/48000 / 44100 is better overall in terms of resources.
+    node.autoconnect = true
+    resample.disable = false   # false / When set to True Dead Island 2 has no audio with a few other games seems like samplerates are not compatible when doing this (Wine/Proton) apps seems alright.
+    resample.quality = 1    # Def 4 / Use 1 for less CPU usage on low end hardware values valid are 0-14 the higher the value the more resources you need.
+    # resample.window = exp # blackman kaiser
+    #resample.cutoff = 0.0
+    #resample.n-taps = 0
+    #resample.param.exp.A = 0.0
+    #resample.param.blackman.alpha = 0.0
+    #resample.param.kaiser.alpha = 0.0
+    #resample.param.kaiser.stopband-attenuation = 0.0
+    #resample.param.kaiser.transition-bandwidth = 0.0
     #monitor.channel-volumes = false
-    #channelmix.disable = true      # false   # brakes game and some other app sounds.
-    #channelmix.min-volume = 0.0
-    #channelmix.max-volume = 10.0
+    channelmix.disable = false  # false / When set to true game sound is broken yet again (Wine/Proton) apps seems alright.
+    # channelmix.min-volume = 0.0
+    # channelmix.max-volume = 10.0
     channelmix.normalize = false  # false
+    channelmix.lock-volume = false  # false
     channelmix.mix-lfe = false  # true
     channelmix.upmix = false  # true
-    ## Since Proton GE has patches done that brakes things as usual instead of fixing...he broke the audio and this time where forced to use DEF or simple...
-    channelmix.upmix-method = simple  # none, simple, psd (Def) ,Disabled as last resort forced
-    #channelmix.lfe-cutoff = 150.0
-    #channelmix.fc-cutoff = 12000.0
-    #channelmix.rear-delay = 12.0
+    channelmix.upmix-method = simple  # Disabled, none, simple, psd (Def)
+    #channelmix.lfe-cutoff = 150.0  # 150.0
+    #channelmix.fc-cutoff  = 12000.0    # 12000.0
+    #channelmix.rear-delay = 12.0   # 12.0
     #channelmix.stereo-widen = 0.0
     #channelmix.hilbert-taps = 0
-    dither.noise = 0  # 0 def
-    dither.method = Disabled # rectangular, triangular, triangular-hf, wannamaker3, shaped5, none def
+    dither.noise = 0    # 0
+    # Def none
+    dither.method = none # Disabled,rectangular,triangular,triangular-hf,wannamaker3,shaped5,Def none
     #debug.wav-path = ""
 }
+
 
 
 ##### For Firefox to work and some other apps as they will have zero sound without it....
@@ -96,31 +105,83 @@ stream.properties = {
 /home/baz/.config/pipewire/pipewire-pulse.conf.d/Firefox-rules.conf
 
 
+# client/stream specific properties
 pulse.rules = [
+    {
+        matches = [
+            {
+                # all keys must match the value. ! negates. ~ starts regex.
+                #client.name                = "Firefox"
+                #application.process.binary = "teams"
+                #application.name           = "~speech-dispatcher.*"
+            }
+        ]
+        actions = {
+            update-props = {
+                #node.latency = 512/48000
+            }
+            # Possible quirks:"
+            #    force-s16-info                 forces sink and source info as S16 format
+            #    remove-capture-dont-move       removes the capture DONT_MOVE flag
+            #    block-source-volume            blocks updates to source volume
+            #    block-sink-volume              blocks updates to sink volume
+            #quirks = [ ]
+        }
+    }
     {
         # skype does not want to use devices that don't have an S16 sample format.
         matches = [
-             #{ application.process.binary = "teams" }
-             #{ application.process.binary = "teams-insiders" }
-             { application.process.binary = "firefox" }
+             { application.process.binary = "teams" }
+             { application.process.binary = "teams-insiders" }
+             { application.process.binary = "teams-for-linux" }
+             { application.process.binary = "skypeforlinux" }
         ]
         actions = { quirks = [ force-s16-info ] }
     }
     {
+        # firefox marks the capture streams as don't move and then they
+        # can't be moved with pavucontrol or other tools.
+        matches = [ { application.process.binary = "firefox" } ]
+        actions = { quirks = [ remove-capture-dont-move ] }
+    }
+    {
         # speech dispatcher asks for too small latency and then underruns.
-        matches = [ { application.name = "~firefox*" } ]
+        matches = [ { application.name = "~speech-dispatcher.*" } ]
         actions = {
             update-props = {
-                pulse.min.req          = 0/44100     # 21ms
-                pulse.min.quantum      = 0/44100     # 21ms
-                default.clock.rate = 44100
+                pulse.min.req          = 2048/44100      # 10.6ms 512/48000
+                pulse.min.quantum      = 2048/44100      # 10.6ms 512/48000
+                pulse.idle.timeout     = 5              # pause after 5 seconds of underrun
             }
         }
     }
+    #{
+    #    matches = [ { application.process.binary = "Discord" } ]
+    #    actions = { quirks = [ block-source-volume ] }
+    #}
 ]
 
 
+### OBS RULES
 
+pulse.rules = [
+  {
+    matches = [
+      { application.process.binary = "obs" }
+      { application.name = "~OBS*" }
+      { media.name = "~OBS*" }
+    ]
+    actions = {
+      update-props = {
+        # Default on 0 OBS will use a some sort 1024 quantum instead of the system wide one.
+        pulse.min.req     = 2048/44100
+        pulse.min.quantum = 2048/44100
+        pulse.min.frag    = 2048/44100
+        pulse.default.req = 2048/44100
+      }
+    }
+  }
+]
 
 
 
@@ -130,7 +191,7 @@ Also keep in mind that latency grows a bit when rates are changed so keep a twea
 I found mine working best with this.
 
 
-
+### UPDATED WIREPLUMBER SETTINGS TO MATCH LOW POWERD LAPTOP AS WELL TO BE THE SAME AS MY PC OVERALL
 /home/baz/.config/wireplumber/wireplumber.conf.d/50-force-s16.conf
 
 
@@ -139,7 +200,9 @@ monitor.alsa.rules = [
   {
     matches = [
       { alsa.id = "ALC892 Analog" }
+      { alsa.id = "ALC269VB Analog" }
       { media.class = "Audio/Sink" }
+      { node.description = "Built-in Audio Analog Stereo" }
       { node.name = "~alsa_output.*analog.*" }
       { node.name = "~alsa_input.*analog.*" }
       { node.name = "~alsa_input.*" }
@@ -147,34 +210,62 @@ monitor.alsa.rules = [
     ],
     actions = {
       update-props = {
-        "audio.channels" "2"
-        "audio.format" = "S16LE"
-        "audio.rate" = 44100
-        "audio.allowed-rates" = [ 44100 ]
-        "resample.disable" = true
-        "resample.quality" = 0
-        "dither.method" = "Disabled"
-        "channelmix.upmix" = false
-        # Same as above...Proton GE fun park in action doing things he should not do it is enough games are broken but audio to now...
-        "channelmix.upmix-method" = "simple" 
-        "channelmix.mix-lfe" = false
-        "channelmix.disable" = true
-        "api.alsa.disable-mmap" = true
-        "api.alsa.disable-batch" = true
-        "api.alsa.disable-tsched" = true
-        "api.alsa.use-chmap" = false
-        "api.alsa.auto-link" = true
-        "api.alsa.multi-rate" = false
-        "api.alsa.headroom" = 8192
-        "api.alsa.start-delay" = 1024
-        "alsa.resolution_bits" = 16
-        "api.alsa.period-size" = 3072
-        "api.alsa.period-num" = 2
-        "audioconvert.filter-graph.disable" = true
+        audio.channels = 2
+        audio.format = "S16LE"  # The sample format of the device. By default, PipeWire will use a 32 bits sample format but a different format can be set here.Possible values "S16LE", "S32LE", "F32LE" (Firefox uses F32LE no matter what...there is no real way to set a global 16bit value seems like )
+        audio.rate = 44100  # By default is your best decent rate or 48k (Proton-GE/Cachy seems to changed something and Dead Island 2 the only game has a trandum choke sometimes when using this NO OTHER APP OR GAME DOES THIS !!! )
+        audio.allowed-rates = [ 44100 48000 ]
+        audio.position = [ FL, FR ]
+        resample.disable = false  # false / When True GE/Cachy Proton brakes with it (Wine/Proton only)
+        resample.quality = 1  # 4 / From valid values 0-14
+        channelmix.disable = false  # false / When set to true game sound is broken yet again (Wine/Proton) apps seems alright.
+        channelmix.normalize = false  # false
+        channelmix.mix-lfe = false  # false
+        channelmix.upmix = false   # true
+        channelmix.upmix-method = "simple" # Only "psd", "none" or "simple" but also "Disabled" is a valid value
+        # channelmix.lfe-cutoff  = 150
+        # channelmix.fc-cutoff   = 12000
+        # channelmix.rear-delay  = 12.0
+        # channelmix.stereo-widen = 0.0
+        # channelmix.hilbert-taps = 0
+        dither.method = "none" # Disabled,rectangular,triangular,triangular-hf,wannamaker3,shaped5,Def none
+        dither.noise = 0  # 0
+        api.alsa.disable-mmap = false # false / Disable the use of mmap for the ALSA device. By default, PipeWire will access the memory of the device using mmap. This can be disabled and force the usage of the slower read and write access modes, in case the mmap support of the device is not working properly.
+        api.alsa.disable-batch = false # false  To disable the additional delay added by this for raw values.
+        api.alsa.use-chmap = false  # false / Use the channel map as reported by the driver. This is disabled by default because it is often wrong and the ACP code handles this better.
+        api.alsa.start-delay = 1024     # 0 / Add a slight delay for some devices and its better this way value can be smaller than 1024 but just personal preference
+        api.alsa.period-size = 3072   # 1024  / I prefer a higher Quantum less cracks but slight delay overall less wasted resources as well.
+        api.alsa.headroom = 8192  # 0 in most cases but was mine 8192
+        api.alsa.period-num = 2   # 2 / total buffer size is effectively period-num * period-size/2.
+        ## You can configure a latency in samples (relative to rate with latency.internal.rate) or in nanoseconds (latency.internal.ns). This value will be added to the total reported latency by the node of the device.
+        latency.internal.rate = 256 # 0 / Mine was 0 least. Different hardware deals very different with latency so is good to find a value that works great for you !!!
+        # latency.internal.ns = 0 # 0
+        session.suspend-timeout-seconds = 0   # 5 sec A higher value might be better here for certain devices or simply use 0 to disable it !
       }
     }
   }
 ]
+
+### api.alsa.period-num Batch / Non-Batch
+# IRQ Frequency api.alsa.period-size/2 vs api.alsa.period-size
+# Extra Delay api.alsa.headroom + api.alsa.period-size/2 vs api.alsa.headroom
+# Buffer Size api.alsa.period-num * api.alsa.period-size/2 vs api.alsa.period-num * api.alsa.period-size
+
+### CANT FIND ANYTHING DOCUMENTED ABOUT THIS
+# api.alsa.htimestamp = false # false
+# api.alsa.multirate = true   # true this value is weird since is not documented...also alternative same valid i can find is api.alsa.multi-rate = true so unsure now whats this about.
+# api.alsa.disable-tsched = false
+# audioconvert.filter-graph.disable = true
+
+## DEBIAN HAS SOMETHING ABOUT THEM BUT NOT MUCH
+# api.alsa.multi-rate # boolean
+# Allow devices from the same card to be opened in multiple sample rates. Default is true. Some older drivers did not properly advertise the capabilities of the device and only really supported opening the device in one rate.
+# api.alsa.htimestamp = false # boolean
+# Use ALSA htimestamps in scheduling, instead of the system clock. Some ALSA drivers produce bad timestamps, so this is not enabled by default and will be disabled at runtime if it looks like the ALSA timestamps are bad.
+# api.alsa.disable-tsched = false # boolean
+# Disable timer-based scheduling, and use IRQ for scheduling instead. The "Pro Audio" profile will usually enable this setting, if it is expected it works on the hardware.
+
+# api.alsa.disable-batch: This disables the batch device tweaks. It removes the extra delay added of period-size/2 if the device can support this. For batch devices it is also a good idea to lower the period-size (and increase the IRQ frequency) to get smaller batch updates and lower latency.
+
 
 
 ### Added a new fix for Wine/Proton audio fix even tho adds delay...as expected obviously but least the audio has less cracks in it plus less CPU wasted.
@@ -202,6 +293,13 @@ pulse.rules = [
   }
 ]
 
+## Increase this or either use the following command for Wine/Proton to fix audio issues.
+## PULSE_LATENCY_MSEC=60 or PULSE_LATENCY_MSEC=100
+# 720=60ms
+# Def Wine is 256...that is to small..
+# 1440=100ms
+# 900=75ms
+# 960=80ms
 
 
 
