@@ -1,0 +1,30 @@
+# Snippet: UMU_NO_RUNTIME bypass to add into build_command in umu/umu_run.py
+# Insert this block immediately after "if opts is None: opts = []" to prefer a direct proton binary
+
+# If user requested to bypass the Steam runtime entirely, try to resolve
+# a concrete proton binary and call it directly. This avoids running
+# pressure-vessel / pv-adverb.
+if os.environ.get("UMU_NO_RUNTIME") == "1":
+    candidates: list[Path] = []
+    proton_env = os.environ.get("PROTONPATH", "")
+    if proton_env:
+        p = Path(proton_env)
+        if not p.is_absolute():
+            p = STEAM_COMPAT.joinpath(p).resolve(strict=False)
+        candidates.append(p.joinpath("proton"))
+    lutris_runners = Path.home().joinpath(".local", "share", "lutris", "runners", "wine")
+    if lutris_runners.is_dir():
+        for child in sorted(lutris_runners.iterdir(), reverse=True):
+            candidates.append(child.joinpath("proton"))
+    resolved = which("proton")
+    if resolved:
+        candidates.insert(0, Path(resolved))
+    for cand in candidates:
+        try:
+            if cand.is_file() and os.access(cand, os.X_OK):
+                verb = os.environ.get("PROTON_VERB", "run")
+                exe = os.environ.get("EXE", "")
+                return (str(cand), verb, exe, *opts)
+        except Exception:
+            continue
+    # fallback to normal behavior if nothing found
