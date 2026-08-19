@@ -1,0 +1,7 @@
+# umu_proton_fix_note.txt
+
+You mentioned the final fix was applied in umu_proton.py and that solved the issue for you.
+
+Please paste your final diff or the key changes you made to umu_proton.py into this file (or describe them) so we can keep a record here. If you prefer, I can turn your pasted diff into a patch you can reapply later.
+
+If you want me to draft a suggested patch for umu_proton.py based on the prior troubleshooting steps, tell me and I will generate it into this repo.

@@ -1,0 +1,28 @@
+# Snippet: Replace UDP probe with TCP connect_ex probe (put inside umu/umu_run.py where the UDP probe is)
+
+# Optional opt-in to assume the local runtime is ready
+if os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
+    log.info("UMU_ASSUME_RUNTIME_READY=1: skipping network probes and using local runtime check")
+    prereq = _check_offline_runtime(runtime)
+else:
+    try:
+        log.debug("Probing TCP connectivity to 1.1.1.1:53 (1s timeout)...")
+        # Use a short TCP connect_ex probe to detect black-hole/firewall cases fast.
+        with socket(AF_INET, SOCK_STREAM) as sock:
+            sock.settimeout(1.0)
+            rc = sock.connect_ex(("1.1.1.1", 53))
+        if rc == 0:
+            # remote reachable
+            prereq = True
+        else:
+            log.debug("TCP connectivity probe failed (errno=%s), falling back to local runtime check", rc)
+            prereq = _check_offline_runtime(runtime)
+    except OSError as e:
+        log.debug("Network probe raised OSError: %s", e)
+        if getattr(e, "errno", None) in (ENETUNREACH,):
+            prereq = _check_offline_runtime(runtime)
+        else:
+            raise
+
+# NOTE: Update the imports at top of file to include SOCK_STREAM:
+# from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM, socket
