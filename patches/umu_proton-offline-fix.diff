@@ -1,0 +1,54 @@
+--- /home/baz/.config/scripts/UMU/umu_proton-offline-fix.py
++++ /home/baz/.config/scripts/UMU/umu_proton.py
+@@ -83,36 +83,32 @@
+     assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()] = ()
+     patch: bytes = b""
+ 
+-    # Create required dirs
+     STEAM_COMPAT.mkdir(exist_ok=True, parents=True)
+     UMU_CACHE.mkdir(parents=True, exist_ok=True)
++
++    try:
++        log.debug("Sending request to 'api.github.com'...")
++        assets = _fetch_releases(session_pools)
++        # TODO: Refactor this function later. It's basically the same as _fetch_releases
++        patch = _fetch_patch(session_pools)
++    except HTTPError:
++        log.debug("Network is unreachable")
+ 
+     with TemporaryDirectory(dir=UMU_CACHE) as tmpcache:
+         tmpdirs: SessionCaches = (get_tempdir(), Path(tmpcache))
+         compatdirs = (UMU_COMPAT, STEAM_COMP)
+-
+-        # First, prefer a local passthrough tool or already-installed compatibility build
+         if _get_umu_runtime_tool(env, os.environ.get("PROTONPATH", "")) is env:
++            return env
++        if _get_delta(env, UMU_COMP, patch, assets, session_pools) is env:
++            return env
++        if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
+             return env
+         if _get_from_compat(env, compatdirs) is env:
+             return env
+ 
+-        # Only query GitHub if local candidate lookup failed.
+-        assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()] = ()
+-        patch: bytes = b""
+-        try:
+-            log.debug("Sending request to 'api.github.com'...")
+-            assets = _fetch_releases(session_pools)
+-            patch = _fetch_patch(session_pools)
+-        except HTTPError:
+-            log.debug("Network is unreachable")
+-
+-        # If we obtained a patch or assets, try the delta/latest flows
+-        if assets:
+-            if _get_delta(env, UMU_COMP, patch, assets, session_pools) is env:
+-                return env
+-            if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
+-                return env
++    os.environ["PROTONPATH"] = ""
++
++    return env
+ 
+ 
+ def _get_umu_runtime_tool(env: dict[str, str], name: str) -> dict[str, str] | None:
