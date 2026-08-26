@@ -1,5 +1,5 @@
---- /home/baz/.config/scripts/UMU/umu_runtime.py
-+++ /home/baz/.config/scripts/UMU/umu_runtime-fix.py
+--- /home/baz/Projects/UMU/umu_runtime.py
++++ /home/baz/Projects/UMU/umu_runtime-fix.py
 @@ -71,6 +71,13 @@
      version: str,
      session_pools: SessionPools
@@ -51,7 +51,7 @@
 +            log.error("%s returned the status: %s", host, resp.status)
 +            return
 +        version: str = resp.data.strip().decode("utf-8")
- 
++
          log.debug("New install detected")
          log.info("Setting up Unified Launcher for Windows Games on Linux...")
          local.mkdir(parents=True, exist_ok=True)
