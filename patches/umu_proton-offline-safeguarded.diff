@@ -1,5 +1,5 @@
---- /home/baz/.config/scripts/UMU/umu_proton.py
-+++ /home/baz/.config/scripts/UMU/umu_proton-offline-fix.py
+--- /home/baz/Projects/UMU/umu_proton.py
++++ /home/baz/Projects/UMU/umu_proton-offline-fix.py
 @@ -83,32 +83,42 @@
      assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()] = ()
      patch: bytes = b""
@@ -18,18 +18,14 @@
  
      with TemporaryDirectory(dir=UMU_CACHE) as tmpcache:
          tmpdirs: SessionCaches = (get_tempdir(), Path(tmpcache))
-         compatdirs = (UMU_COMP, STEAM_COMP)
+         compatdirs = (UMU_COMPAT, STEAM_COMPAT)
 +
 +        # First, prefer a local passthrough tool or already-installed compatibility build
          if _get_umu_runtime_tool(env, os.environ.get("PROTONPATH", "")) is env:
 -            return env
--        if _get_delta(env, UMU_COMP, patch, assets, session_pools) is env:
+-        if _get_delta(env, UMU_COMPAT, patch, assets, session_pools) is env:
 -            return env
 -        if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
-+            return env
-+        if _get_delta(env, UMU_COMP, patch, assets, session_pools) is env:
-+            return env
-+        if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
              return env
          if _get_from_compat(env, compatdirs) is env:
              return env
@@ -55,10 +51,13 @@
 +
 +        # If we obtained a patch or assets, try the delta/latest flows
 +        if assets:
-+            if _get_delta(env, UMU_COMP, patch, assets, session_pools) is env:
++            if _get_delta(env, UMU_COMPAT, patch, assets, session_pools) is env:
 +                return env
 +            if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
 +                return env
+ 
+ 
+ def _get_umu_runtime_tool(env: dict[str, str], name: str) -> dict[str, str] | None:
 @@ -187,6 +197,13 @@
  
  
@@ -85,7 +84,7 @@
 +    # PROCEED WITH DEFAULT BEHAVIOR
 +
      """Check for updates to the umu-scout tool against the version manifest in the repo's releases."""
-     umu_scout_versions = UMU_COMP.joinpath(protonpath, "VERSIONS.txt")
+     umu_scout_versions = UMU_COMPAT.joinpath(protonpath, "VERSIONS.txt")
      if not umu_scout_versions.exists():
 @@ -257,6 +281,13 @@
      session_pools: SessionPools,
