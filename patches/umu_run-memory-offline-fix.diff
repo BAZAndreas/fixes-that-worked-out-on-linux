@@ -1,41 +1,57 @@
---- /home/baz/.config/scripts/UMU/umu_run-memory-offline-fix.py
-+++ /home/baz/.config/scripts/UMU/umu_run.py
-@@ -970,29 +970,20 @@
+--- /home/baz/Projects/UMU/umu_run.py
++++ /home/baz/Projects/UMU/umu_run-memory-offline-fix.py
+@@ -407,6 +407,11 @@
+             time.sleep(1)
+ 
+     is_nsenter: bool = bool(nsenter)
++
++    if env.get("UMU_NO_RUNTIME") == "1":
++        proton = Path(env["PROTONPATH"], "proton")
++        return (str(proton), env["PROTON_VERB"], env["EXE"], *opts)
++
+     return (
+         *nsenter,
+         *layer.command(env["PROTON_VERB"], unwrapped=is_nsenter),
+@@ -965,20 +970,29 @@
              runtime_name, runtime_variant, _ = runtime_version
              os.environ["RUNTIMEPATH"] = runtime_variant
  
--        # Optional opt-in to assume the local runtime is ready
--        if os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
--            log.info("UMU_ASSUME_RUNTIME_READY=1: skipping network probes and using local runtime check")
+-        try:
+-            log.debug("Connecting to '1.1.1.1'...")
+-            with socket(AF_INET, SOCK_DGRAM) as sock:
+-                sock.settimeout(5)
+-                sock.connect(("1.1.1.1", 53))
+-            prereq = True
+-        except TimeoutError:  # Request to a server timed out
+-            log.debug("Request timed out")
++        # Optional opt-in to assume the local runtime is ready
++        if os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++            log.info("UMU_ASSUME_RUNTIME_READY=1: skipping network probes and using local runtime check")
+             prereq = _check_offline_runtime(runtime)
+-        except OSError as e:  # No internet
+-            if e.errno != ENETUNREACH:
+-                raise
+-            log.debug("Network is unreachable")
 -            prereq = _check_offline_runtime(runtime)
--        else:
--            try:
--                log.debug("Probing TCP connectivity to 1.1.1.1:53 (1s timeout)...")
--                # Use a short TCP connect_ex probe to detect black-hole/firewall cases fast.
--                with socket(AF_INET, SOCK_STREAM) as sock:
--                    sock.settimeout(1.0)
--                    rc = sock.connect_ex(("1.1.1.1", 53))
--                if rc == 0:
--                    # remote reachable
--                    prereq = True
--                else:
--                    log.debug("TCP connectivity probe failed (errno=%s), falling back to local runtime check", rc)
--                    prereq = _check_offline_runtime(runtime)
--            except OSError as e:
--                log.debug("Network probe raised OSError: %s", e)
--                if getattr(e, "errno", None) in (ENETUNREACH,):
--                    prereq = _check_offline_runtime(runtime)
--                else:
--                    raise
-+        try:
-+            log.debug("Connecting to '1.1.1.1'...")
-+            with socket(AF_INET, SOCK_DGRAM) as sock:
-+                sock.settimeout(5)
-+                sock.connect(("1.1.1.1", 53))
-+            prereq = True
-+        except TimeoutError:  # Request to a server timed out
-+            log.debug("Request timed out")
-+            prereq = _check_offline_runtime(runtime)
++        else:
++            try:
++                log.debug("Probing TCP connectivity to 1.1.1.1:53 (1s timeout)...")
++                # Use a short TCP connect_ex probe to detect black-hole/firewall cases fast.
++                with socket(AF_INET, SOCK_STREAM) as sock:
++                    sock.settimeout(1.0)
++                    rc = sock.connect_ex(("1.1.1.1", 53))
++                if rc == 0:
++                    # remote reachable
++                    prereq = True
++                else:
++                    log.debug("TCP connectivity probe failed (errno=%s), falling back to local runtime check", rc)
++                    prereq = _check_offline_runtime(runtime)
++            except OSError as e:
++                log.debug("Network probe raised OSError: %s", e)
++                if getattr(e, "errno", None) in (ENETUNREACH,):
++                    prereq = _check_offline_runtime(runtime)
++                else:
++                    raise
  
          if not prereq:
              err: str = (
