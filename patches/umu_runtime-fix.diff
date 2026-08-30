@@ -1,0 +1,50 @@
+--- /home/baz/.config/scripts/UMU/umu_runtime-fix.py
++++ /home/baz/.config/scripts/UMU/umu_runtime.py
+@@ -275,18 +275,16 @@
+     codename, variant, _ = runtime_ver
+     host: str = "repo.steampowered.com"
+     endpoint: str = f"/{variant.removesuffix('-arm64')}/images"
+-
+-    # New install: we must fetch the latest-public-beta.txt to know which archive to
+-    # download and install. Only fetch when the runtime is not already installed.
++    url: str = f"https://{host}{endpoint}/latest-public-beta.txt"
++    log.debug("Sending request to '%s' for 'latest-public-beta.txt'...", url)
++    resp = http_pool.request(HTTPMethod.GET.value, url)
++    if resp.status != HTTPStatus.OK:
++        log.error("%s returned the status: %s", host, resp.status)
++        return
++    version: str = resp.data.strip().decode("utf-8")
++
++    # New install
+     if not has_runtime_installed(local):
+-        url: str = f"https://{host}{endpoint}/latest-public-beta.txt"
+-        log.debug("Sending request to '%s' for 'latest-public-beta.txt'...", url)
+-        resp = http_pool.request(HTTPMethod.GET.value, url)
+-        if resp.status != HTTPStatus.OK:
+-            log.error("%s returned the status: %s", host, resp.status)
+-            return
+-        version: str = resp.data.strip().decode("utf-8")
+-
+         log.debug("New install detected")
+         log.info("Setting up Unified Launcher for Windows Games on Linux...")
+         local.mkdir(parents=True, exist_ok=True)
+@@ -301,19 +299,9 @@
+         log.info("Using %s (latest)", runtime_ver[1])
+         return
+ 
+-    # If updates are disabled, do not contact the network at all.
+     if os.environ.get("UMU_RUNTIME_UPDATE") == "0":
+         log.info("%s updates disabled, skipping", runtime_ver[1])
+         return
+-
+-    # Existing install and updates enabled: fetch the latest-public-beta.txt and continue.
+-    url: str = f"https://{host}{endpoint}/latest-public-beta.txt"
+-    log.debug("Sending request to '%s' for 'latest-public-beta.txt'...", url)
+-    resp = http_pool.request(HTTPMethod.GET.value, url)
+-    if resp.status != HTTPStatus.OK:
+-        log.error("%s returned the status: %s", host, resp.status)
+-        return
+-    version: str = resp.data.strip().decode("utf-8")
+ 
+     _update_umu(local, runtime_ver, version, session_pools)
+ 

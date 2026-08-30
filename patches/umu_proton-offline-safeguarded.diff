@@ -1,0 +1,158 @@
+--- /home/baz/Projects/UMU/umu_proton.py
++++ /home/baz/Projects/UMU/umu_proton-offline-fix.py
+@@ -83,32 +83,42 @@
+     assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()] = ()
+     patch: bytes = b""
+ 
++    # Create required dirs
+     STEAM_COMPAT.mkdir(exist_ok=True, parents=True)
+     UMU_CACHE.mkdir(parents=True, exist_ok=True)
+-
+-    try:
+-        log.debug("Sending request to 'api.github.com'...")
+-        assets = _fetch_releases(session_pools)
+-        # TODO: Refactor this function later. It's basically the same as _fetch_releases
+-        patch = _fetch_patch(session_pools)
+-    except HTTPError:
+-        log.debug("Network is unreachable")
+ 
+     with TemporaryDirectory(dir=UMU_CACHE) as tmpcache:
+         tmpdirs: SessionCaches = (get_tempdir(), Path(tmpcache))
+         compatdirs = (UMU_COMPAT, STEAM_COMPAT)
++
++        # First, prefer a local passthrough tool or already-installed compatibility build
+         if _get_umu_runtime_tool(env, os.environ.get("PROTONPATH", "")) is env:
+-            return env
+-        if _get_delta(env, UMU_COMPAT, patch, assets, session_pools) is env:
+-            return env
+-        if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
+             return env
+         if _get_from_compat(env, compatdirs) is env:
+             return env
+ 
+-    os.environ["PROTONPATH"] = ""
+-
+-    return env
++        # NEW: offline guard
++        if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++            log.info("Skipping SteamRT fetch due to offline mode")
++            return
++        # PROCEED WITH DEFAULT BEHAVIOR
++
++        # Only query GitHub if local candidate lookup failed.
++        assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()] = ()
++        patch: bytes = b""
++        try:
++            log.debug("Sending request to 'api.github.com'...")
++            assets = _fetch_releases(session_pools)
++            patch = _fetch_patch(session_pools)
++        except HTTPError:
++            log.debug("Network is unreachable")
++
++        # If we obtained a patch or assets, try the delta/latest flows
++        if assets:
++            if _get_delta(env, UMU_COMPAT, patch, assets, session_pools) is env:
++                return env
++            if _get_latest(env, compatdirs, tmpdirs, assets, session_pools) is env:
++                return env
+ 
+ 
+ def _get_umu_runtime_tool(env: dict[str, str], name: str) -> dict[str, str] | None:
+@@ -187,6 +197,13 @@
+ 
+ 
+ def _fetch_patch(session_pools: SessionPools) -> bytes:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     resp: BaseHTTPResponse
+     _, http_pool = session_pools
+     url: str = "https://api.github.com"
+@@ -234,6 +251,13 @@
+ def _umu_scout_update(
+     http_pool: PoolManager, headers: dict, protonpath: str, assets: list
+ ) -> bool:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     """Check for updates to the umu-scout tool against the version manifest in the repo's releases."""
+     umu_scout_versions = UMU_COMPAT.joinpath(protonpath, "VERSIONS.txt")
+     if not umu_scout_versions.exists():
+@@ -257,6 +281,13 @@
+     session_pools: SessionPools,
+ ) -> tuple[tuple[str, str], tuple[str, str]] | tuple[()]:
+     """Fetch the latest releases from the Github API."""
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     resp: BaseHTTPResponse
+     digest_asset: tuple[str, str]
+     proton_asset: tuple[str, str]
+@@ -336,6 +367,13 @@
+     assets: tuple[tuple[str, str], tuple[str, str]],
+     session_pools: SessionPools,
+ ) -> dict[str, str]:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     """Download the latest UMU-Proton or GE-Proton."""
+     resp: BaseHTTPResponse
+     tmpfs, cache = session_caches
+@@ -499,6 +537,13 @@
+     assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()],
+     session_pools: SessionPools,
+ ) -> dict[str, str] | None:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     """Download the latest Proton for new installs.
+ 
+     Either GE-Proton or UMU-Proton will be downloaded if they do not exist.
+@@ -582,6 +627,13 @@
+     session_caches: SessionCaches,
+     compat_tools: tuple[Path, Path],
+ ) -> None:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     """Install a Proton directory to Steam's compatibilitytools.d.
+ 
+     An installation is primarily composed of two steps: extract and move. A
+@@ -640,6 +692,13 @@
+     assets: tuple[tuple[str, str], tuple[str, str]] | tuple[()],
+     session_pools: SessionPools,
+ ) -> dict[str, str] | None:
++
++    # NEW: offline guard
++    if os.environ.get("UMU_NO_RUNTIME") == "1" or os.environ.get("UMU_ASSUME_RUNTIME_READY") == "1":
++        log.info("Skipping SteamRT fetch due to offline mode")
++        return
++    # PROCEED WITH DEFAULT BEHAVIOR
++
+     thread_pool, _ = session_pools
+     version: str = (
+         "GE-Latest" if os.environ.get("PROTONPATH") == "GE-Latest" else "UMU-Latest"
