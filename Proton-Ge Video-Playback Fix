@@ -1,3 +1,6 @@
+# WARNING YOU MUST UPDATE YOUR LIBS BASED ON THE PACKAGE UPDATE YOU GOT DO NOT JUST COPY PASTE !!!
+# IF ANY CODEC GETS AN UPDATE YOUR VERSION CHANGES KEEP THAT IN MIND AS WELL SO YOU HAVE TO UPDATE THE VERSIONS !!!
+
 This will be still valid since Proton GE does not keep track of Arch A/B changes this files must be linked to Proton GE libraries in order to get video playback in certain games !
 Since now they are on par with no huge changes the video playback works again as normal since 2025 Sep around videos stopped working until 2026 March around ?!
 This is just a reminder that it can happen again and so to have a simple fix just in case.
