@@ -210,6 +210,12 @@ monitor.alsa.rules = [
     ],
     actions = {
       update-props = {
+        # mixer-path and soft-mixer to true to fix some muffled sound on certain cards while also will mute your channels !! Fixes one bug but causes another.
+        # Both must be set to true and if not restore defaults as false.
+        api.alsa.disable-mixer-path = true
+        api.alsa.soft-mixer = true
+        # session.suspend-on-idle = false
+        # node.pause-on-idle      = false
         audio.channels = 2
         audio.format = "S16LE"  # The sample format of the device. By default, PipeWire will use a 32 bits sample format but a different format can be set here.Possible values "S16LE", "S32LE", "F32LE" (Firefox uses F32LE no matter what...there is no real way to set a global 16bit value seems like )
         audio.rate = 44100  # By default is your best decent rate or 48k (Proton-GE/Cachy seems to changed something and Dead Island 2 the only game has a trandum choke sometimes when using this NO OTHER APP OR GAME DOES THIS !!! )
