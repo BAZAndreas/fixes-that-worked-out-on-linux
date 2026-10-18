@@ -1,3 +1,7 @@
+## WARNING This patches works only to prior Proton 9/10 versions...
+## If using Proton 11.x they do not work no more since GE/Cachy dropped GSTREAMER !!!
+## If your media playback fails to even render or crashes the blame fully goes to the maintainer it self not you or your packages anymore !!!
+
 # WARNING YOU MUST UPDATE YOUR LIBS BASED ON THE PACKAGE UPDATE YOU GOT DO NOT JUST COPY PASTE !!!
 # IF ANY CODEC GETS AN UPDATE YOUR VERSION CHANGES KEEP THAT IN MIND AS WELL SO YOU HAVE TO UPDATE THE VERSIONS !!!
 
