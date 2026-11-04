@@ -1,6 +1,11 @@
 ## WARNING This patches works only to prior Proton 9/10 versions...
 ## If using Proton 11.x they do not work no more since GE/Cachy dropped GSTREAMER !!!
 ## If your media playback fails to even render or crashes the blame fully goes to the maintainer it self not you or your packages anymore !!!
+## Note to self Dead Island 2 video playback fails cause of windemo/ffmpeg can not render certain media codec types hence sometimes the intro works other times do not and neither a new game intro works.
+## The fix ? There is no fix unless you manually edit the files to skip which is not recommended at all rather open an issue ticket since there is no real fix but hope GE/Cachy Protons can fix them.
+## The best way is the bellow one and using an older version but you waste storage space + need to keep track of your codec packages then manual link them again.
+## The other worst part of not using a new Proton/Wine you lose performance fixes which is not nice as the game/s can work better with the new releases (Unless broke instead which again results in a roll back to an older version) Oh Linux :)
+
 
 # WARNING YOU MUST UPDATE YOUR LIBS BASED ON THE PACKAGE UPDATE YOU GOT DO NOT JUST COPY PASTE !!!
 # IF ANY CODEC GETS AN UPDATE YOUR VERSION CHANGES KEEP THAT IN MIND AS WELL SO YOU HAVE TO UPDATE THE VERSIONS !!!
