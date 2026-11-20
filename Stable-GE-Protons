@@ -1,0 +1,28 @@
+# For my self a note to not bother with other releases from now on and have a history of noted good working GE versions since i switched to Linux with added notes if must.
+
+# A great working version i had on hand at the time when started and worked really great for months !
+Proton GE 10-9 
+
+# Showed certain media features bugs but this was rather cause of system wide library miss matching so manual fixes was needed worked great after
+# Broken games noted Watch Dogs Legion was fully broken with it 
+Proton GE 10-10/11
+
+# Jumping from anything 10-1x releases skipped since they where buggy 
+# Found best stable for now for SnowRunner and NFS Heat anything for this two games above 10-26 is broken.
+Proton GE 10-26 
+
+# Second stable version working great but broken games can be seen least glitches and flickering is fixed from the previous 30s releases !
+# Snowrunner/NFS Heat does not work with this one.
+Proton GE 10-34
+
+# This where horrible skip them fully
+Proton GE 11-1/5
+# Slight issues with controllers...but fixed the issues from 1-5 releases least.(Possible marking stable)
+Proton GE 11-6 
+
+# Fixed a lot of issues and works amazingly with no issues seen by me also is best stable in the 11.x releases.
+Proton GE 11-9
+
+# Slight broken > Mafia 3 does not work something is broken fully here as resolution crashes the game no matter what resolution is used.
+# Mafia 3 works in window mode but never in fullscreen (Failed and assumed is a media playback issue since audio was working...) Bad releases for certain games unlike Wine fucked up something now.
+Proton GE 11-10/11/12
